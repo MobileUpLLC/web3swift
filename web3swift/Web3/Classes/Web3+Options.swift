@@ -83,19 +83,8 @@ public struct Web3Options {
     }
     
     public static func smartMergeGasLimit(originalOptions: Web3Options?, extraOptions: Web3Options?, gasEstimage: BigUInt) -> BigUInt? {
-        guard let mergedOptions = Web3Options.merge(originalOptions, with: extraOptions) else {return nil} //just require any non-nils
-        if mergedOptions.gasLimit == nil {
-            return nil // there is no opinion from user, so we can not proceed
-        } else {
-            if originalOptions != nil, originalOptions!.gasLimit != nil, originalOptions!.gasLimit! < gasEstimage { // original gas estimate was less than what's required, so we check extra options
-                if extraOptions != nil, extraOptions!.gasLimit != nil, extraOptions!.gasLimit! >= gasEstimage {
-                    return extraOptions!.gasLimit!
-                } else {
-                    return nil
-                }
-            } else {
-                return gasEstimage
-            }
-        }
+        guard let mergedOptions = Web3Options.merge(originalOptions, with: extraOptions) else { return nil }
+        guard let gasLimit = mergedOptions.gasLimit, gasLimit >= gasEstimage else { return gasEstimage }
+        return gasLimit
     }
 }
