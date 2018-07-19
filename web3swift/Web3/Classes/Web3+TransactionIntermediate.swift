@@ -129,7 +129,7 @@ extension web3.web3contract.TransactionIntermediate {
                 guard let estimate = Web3Options.smartMergeGasLimit(originalOptions: options, extraOptions: mergedOptions, gasEstimate: gasEstimate) else {
                     throw Web3Error.processingError("Failed to calculate gas estimate that satisfied options")
                 }
-                assembledTransaction.nonce = nonce
+                assembledTransaction.nonce = self.transaction.nonce > nonce ? self.transaction.nonce : nonce
                 assembledTransaction.gasLimit = estimate
                 if assembledTransaction.gasPrice == 0 {
                     if mergedOptions.gasPrice != nil {
