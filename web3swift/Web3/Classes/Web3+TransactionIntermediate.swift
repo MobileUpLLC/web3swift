@@ -52,46 +52,19 @@ extension web3.web3contract {
         
         public func send(password: String = "BANKEXFOUNDATION", options: Web3Options? = nil, onBlock: String = "pending") -> Result<[String:String], Web3Error> {
             do {
-                guard var mergedOptions = Web3Options.merge(self.options, with: options) else
-                {
+                guard let options = options else {
                     return Result.failure(Web3Error.inputError("Invalid options supplied"))
                 }
-                guard let from = mergedOptions.from else
-                {
+                guard let from = options.from else {
                     return Result.failure(Web3Error.inputError("Invalid options supplied"))
                 }
-                let nonceResult = self.web3.eth.getTransactionCount(address: from, onBlock: onBlock)
-                if case .failure(let err) = nonceResult {
-                    return Result.failure(err)
-                }
-                try self.setNonce(nonceResult.value!)
-                let estimatedGasResult = self.estimateGas(options: self.options)
-                if case .failure(let err) = estimatedGasResult {
-                    return Result.failure(err)
-                }
-                if mergedOptions.gasLimit == nil {
-                    mergedOptions.gasLimit = estimatedGasResult.value!
-                } else {
-                    if (mergedOptions.gasLimit! < estimatedGasResult.value!) {
-                        return Result.failure(Web3Error.inputError("Estimated gas is larger than the gas limit"))
-                    }
-                    mergedOptions.gasLimit = estimatedGasResult.value!
-                }
-                var transaction = self.transaction
-                if mergedOptions.gasLimit != nil {
-                    transaction.gasLimit = mergedOptions.gasLimit!
-                    self.transaction = transaction
-                }
-                self.options = mergedOptions
                 if let keystoreManager = self.web3.provider.attachedKeystoreManager {
                     try Web3Signer.signTX(transaction: &self.transaction, keystore: keystoreManager, account: from, password: password)
-                    print(self.transaction)
                     return self.web3.eth.sendRawTransaction(self.transaction)
                 } else {
-                    return self.web3.eth.sendTransaction(self.transaction, options: mergedOptions)
+                    return self.web3.eth.sendTransaction(self.transaction, options: options)
                 }
-            }
-            catch {
+            } catch {
                 return Result.failure(Web3Error.generalError(error))
             }
         }
